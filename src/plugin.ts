@@ -1,64 +1,74 @@
-import deviceSizes from './sizes'
-import { createAndPlace } from './createAndPlace'
-const { command, currentPage, closePlugin } = figma
-const { selection } = currentPage
+import deviceSizes from "./sizes";
+import { createAndPlace } from "./createAndPlace";
+const { command, currentPage, closePlugin } = figma;
+const { selection } = currentPage;
 
-const all = [...Object.keys(deviceSizes).map(key => deviceSizes[key])]
-const devices = command === 'all'
-  // flatten all devices to a single array
-  ? [].concat.apply([], all)
-  : deviceSizes[command] 
+const all = [...Object.keys(deviceSizes).map((key) => deviceSizes[key])];
+const devices =
+  command === "all"
+    ? // flatten all devices to a single array
+      [].concat.apply([], all)
+    : deviceSizes[command];
 
 function hasValidSelection(nodes) {
-  const oneSelected = nodes.length === 1
-  if (!oneSelected) return false
-  
-  const frameTypes = ["FRAME", "COMPONENT", "INSTANCE"]
-  const isFrame = frameTypes.indexOf(nodes[0].type) >= 0
-  return isFrame
+  const oneSelected = nodes.length === 1;
+  if (!oneSelected) return false;
+
+  const frameTypes = ["FRAME", "COMPONENT", "INSTANCE"];
+  const isFrame = frameTypes.indexOf(nodes[0].type) >= 0;
+  return isFrame;
 }
 
 function main(nodes): Promise<string> {
   if (!hasValidSelection(selection)) {
-    return Promise.resolve('Select a single frame to test responsive sizes')
+    return Promise.resolve("Select a single frame to test responsive sizes");
   }
 
   // the frame to clone
-  const selectedNode = nodes[0]
+  const selectedNode = nodes[0];
 
   function generateContainerFrames() {
-    let frames: FrameNode[] = []
-    
+    let frames: FrameNode[] = [];
+
     for (let [index, device] of devices.entries()) {
-      frames.push(createAndPlace({ device, devices, index, selectedNode }))
+      frames.push(createAndPlace({ device, devices, index, selectedNode }));
     }
-    
-    return frames
+
+    return frames;
   }
 
   function insertSelectionAndResizeIntoContainerFrames(containerFrames) {
     for (let container of containerFrames) {
-      const clone = selectedNode.clone()
-      clone.x = 0
-      clone.y = 0
-      clone.resize(container.width, container.height)
-      container.appendChild(clone)
+      let width = container.width;
+      let xPosition = 0;
+      if (
+        container.name === 'iPad Mini/iPad 9.7" Portrait' ||
+        container.name === 'iPad Mini/iPad 9.7" Landsape'
+      ) {
+        width = 600;
+        xPosition = (container.width - 600) / 2;
+      }
+      const clone = selectedNode.clone();
+      clone.x = xPosition;
+      clone.y = 0;
+      clone.resize(width, container.height);
+      container.appendChild(clone);
     }
   }
 
-  const containerFrames = generateContainerFrames()
-  
+  const containerFrames = generateContainerFrames();
+
   // if the selected node is a frame, we have to manually append it into
   // the newly generated containers. if the selected node is a component,
   // this is not needed because the instances don't necessarily need
   // to be housed in a parent frame.
   if (selectedNode.type === "FRAME") {
-    insertSelectionAndResizeIntoContainerFrames(containerFrames)
+    insertSelectionAndResizeIntoContainerFrames(containerFrames);
   }
 
-  figma.currentPage.selection = containerFrames
-  figma.viewport.scrollAndZoomIntoView(containerFrames)
-  return Promise.resolve('Responsified ⚡️')
+  figma.currentPage.selection = containerFrames;
+  figma.viewport.scrollAndZoomIntoView(containerFrames);
+  return Promise.resolve("Responsified ⚡️");
 }
 
-main(selection).then((msg) => closePlugin(msg))
+main(selection).then((msg) => closePlugin(msg));

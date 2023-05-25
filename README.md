@@ -9,9 +9,9 @@ A Figma plugin to quickly test your designs across multiple device sizes.
 ## Usage
 
 1. Select any frame, component, or instance
-2. Menu > Responsify️️ ⚡️ > Select device sizes to test
+2. Menu > Responsify️️-desj > Select device sizes to test
 3. Command + Shift + P to re-run
- 
+
 ## Installation and contributing
 
 1. Clone the repository: `git clone https://github.com/brianlovin/figma-responsify.git`
